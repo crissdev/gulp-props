@@ -4,6 +4,7 @@ var props = require('../');
 var gutil = require('gulp-util');
 var fs = require('fs');
 var path = require('path');
+var es = require('event-stream');
 
 require('should');
 require('mocha');
@@ -11,14 +12,20 @@ require('mocha');
 
 describe('gulp-props', function() {
 
-    var demoFile;
+    var demoFileBuffer,
+        demoFileStream;
 
 
     beforeEach(function() {
-        demoFile = new gutil.File({
+        demoFileBuffer = new gutil.File({
             path: path.normalize('./test/demo.properties'),
             cwd: './test',
             contents: fs.readFileSync('./test/demo.properties')
+        });
+        demoFileStream = new gutil.File({
+            path: path.normalize('./test/demo.properties'),
+            cwd: './test',
+            contents: fs.createReadStream('./test/demo.properties')
         });
     });
 
@@ -28,10 +35,11 @@ describe('gulp-props', function() {
 
         stream.once('data', function(file) {
             file.contents.toString('utf8').should.equal('{"name":"Gulp","message":"Hello!"}');
+            file.path.should.equal('test/demo.json');
             done();
         });
 
-        stream.write(demoFile);
+        stream.write(demoFileBuffer);
         stream.end();
     });
 
@@ -40,10 +48,11 @@ describe('gulp-props', function() {
 
         stream.once('data', function(file) {
             file.contents.toString('utf8').should.equal('{\n  "name": "Gulp",\n  "message": "Hello!"\n}');
+            file.path.should.equal('test/demo.json');
             done();
         });
 
-        stream.write(demoFile);
+        stream.write(demoFileBuffer);
         stream.end();
     });
 
@@ -52,10 +61,11 @@ describe('gulp-props', function() {
 
         stream.once('data', function(file) {
             file.contents.toString('utf8').should.equal('{\n    "name": "Gulp",\n    "message": "Hello!"\n}');
+            file.path.should.equal('test/demo.json');
             done();
         });
 
-        stream.write(demoFile);
+        stream.write(demoFileBuffer);
         stream.end();
     });
 
@@ -64,10 +74,11 @@ describe('gulp-props', function() {
 
         stream.once('data', function(file) {
             file.contents.toString('utf8').should.equal('var config = config || {};\nconfig[\'name\'] = \'Gulp\';\nconfig[\'message\'] = \'Hello!\';\n');
+            file.path.should.equal('test/demo.js');
             done();
         });
 
-        stream.write(demoFile);
+        stream.write(demoFileBuffer);
         stream.end();
     });
 
@@ -76,10 +87,11 @@ describe('gulp-props', function() {
 
         stream.once('data', function(file) {
             file.contents.toString('utf8').should.equal('var state = state || {};\nstate[\'name\'] = \'Gulp\';\nstate[\'message\'] = \'Hello!\';\n');
+            file.path.should.equal('test/demo.js');
             done();
         });
 
-        stream.write(demoFile);
+        stream.write(demoFileBuffer);
         stream.end();
     });
 
@@ -91,7 +103,7 @@ describe('gulp-props', function() {
             done();
         });
 
-        stream.write(demoFile);
+        stream.write(demoFileBuffer);
         stream.end();
     });
 
@@ -100,10 +112,26 @@ describe('gulp-props', function() {
 
         stream.once('data', function(file) {
             file.contents.toString('utf8').should.equal('var _123 = _123 || {};\n_123[\'name\'] = \'Gulp\';\n_123[\'message\'] = \'Hello!\';\n');
+            file.path.should.equal('test/demo.js');
             done();
         });
 
-        stream.write(demoFile);
+        stream.write(demoFileBuffer);
+        stream.end();
+    });
+
+    it('should work with streams', function(done) {
+        var stream = props();
+
+        stream.on('data', function(file) {
+            file.pipe(es.wait(function(err, data) {
+                data.toString('utf8').should.equal('var config = config || {};\nconfig[\'name\'] = \'Gulp\';\nconfig[\'message\'] = \'Hello!\';\n');
+                file.path.should.equal('test/demo.js');
+                done();
+            }));
+        });
+
+        stream.write(demoFileStream);
         stream.end();
     });
 });

@@ -5,6 +5,7 @@ var gutil = require('gulp-util'),
     extend = require('extend'),
     propsParser = require('properties-parser'),
     isKeyword = require('is-keyword-js'),
+    BufferStreams = require('bufferstreams'),
     PluginError = gutil.PluginError,
     PLUGIN_NAME = 'gulp-props',
     entryTemplate = '<%= data.ns%>[\'<%=data.key%>\'] = \'<%= data.value%>\';',
@@ -25,8 +26,35 @@ function getValidIdentifier(str) {
     return identifier;
 }
 
+function props2json(buffer, options) {
+    var props = propsParser.parse(buffer.toString('utf8')),
+        output;
+
+    if (options.namespace) {
+        output = ['var ' + options.namespace + ' = ' + options.namespace + ' || {};'];
+
+        Object.keys(props).forEach(function(key) {
+            output.push(gutil.template(entryTemplate, {
+                file: {
+                },
+                data: {
+                    ns: options.namespace,
+                    key: key.replace(rKey, '\\$1'),
+                    value: props[key].replace(rValue, '\\$1')
+                }
+            }));
+        });
+        output = output.join('\n') + '\n';
+    }
+    else {
+        output = JSON.stringify(props, options.replacer, options.space);
+    }
+    return new Buffer(output);
+}
+
 
 module.exports = function(options) {
+    var self = this;
     options = extend({ namespace: 'config', space: null, replacer: null }, options);
 
     return through.obj(function(file, enc, callback) {
@@ -40,44 +68,34 @@ module.exports = function(options) {
         }
 
         if (file.isStream()) {
-            throw new PluginError(PLUGIN_NAME, 'Streaming is not supported!');
-        }
-        else if (file.isNull()) {
-            this.push(file);
-            return callback();
+            file.contents = file.contents.pipe(new BufferStreams(function(err, buf, cb) {
+                if (err) {
+                    self.emit('error', new PluginError(PLUGIN_NAME, err.message));
+                }
+                else {
+                    try {
+                        cb(null, props2json(buf, options));
+                        file.contents = props2json(file.contents, options);
+                        file.path = gutil.replaceExtension(file.path, options.namespace ? '.js' : '.json');
+                    }
+                    catch (error) {
+                        self.emit('error', new PluginError(PLUGIN_NAME, error.message));
+                        cb(error);
+                    }
+                }
+            }));
         }
         else if (file.isBuffer()) {
             try {
-                var props = propsParser.parse(file.contents.toString('utf8')),
-                    output;
-
-                if (options.namespace) {
-                    output = ['var ' + options.namespace + ' = ' + options.namespace + ' || {};'];
-
-                    Object.keys(props).forEach(function(key) {
-                        output.push(gutil.template(entryTemplate, {
-                            file: file,
-                            data: {
-                                ns: options.namespace,
-                                key: key.replace(rKey, '\\$1'),
-                                value: props[key].replace(rValue, '\\$1')
-                            }
-                        }));
-                    });
-                    output = output.join('\n') + '\n';
-                }
-                else {
-                    output = JSON.stringify(props, options.replacer, options.space);
-                }
-                file.contents = new Buffer(output);
+                file.contents = props2json(file.contents, options);
+                file.path = gutil.replaceExtension(file.path, options.namespace ? '.js' : '.json');
             }
             catch (error) {
                 this.emit('error', new PluginError(PLUGIN_NAME, error.message));
                 return callback();
             }
-
-            this.push(file);
-            return callback();
         }
+        this.push(file);
+        return callback();
     });
 };
