@@ -1,10 +1,11 @@
 'use strict';
 
-var props = require('../');
-var gutil = require('gulp-util');
-var fs = require('fs');
-var path = require('path');
-var es = require('event-stream');
+var props = require('../'),
+    gutil = require('gulp-util'),
+    File = gutil.File,
+    fs = require('fs'),
+    path = require('path'),
+    es = require('event-stream');
 
 require('should');
 require('mocha');
@@ -12,126 +13,290 @@ require('mocha');
 
 describe('gulp-props', function() {
 
-    var demoFileBuffer,
-        demoFileStream;
+    // Test files
+
+    var validFile,
+        emptyFile,
+        specialFile,
+        nullFile;
 
 
-    beforeEach(function() {
-        demoFileBuffer = new gutil.File({
-            path: path.normalize('./test/demo.properties'),
-            cwd: './test',
-            contents: fs.readFileSync('./test/demo.properties')
-        });
-        demoFileStream = new gutil.File({
-            path: path.normalize('./test/demo.properties'),
-            cwd: './test',
-            contents: fs.createReadStream('./test/demo.properties')
-        });
-    });
+    describe('in buffer mode', function() {
 
-
-    it('should return JSON when namespace empty', function(done) {
-        var stream = props({ namespace: '' });
-
-        stream.once('data', function(file) {
-            file.contents.toString('utf8').should.equal('{"name":"Gulp","message":"Hello!"}');
-            file.path.should.equal('test/demo.json');
-            done();
-        });
-
-        stream.write(demoFileBuffer);
-        stream.end();
-    });
-
-    it('should return pretty JSON when namespace is empty and space=2 option defined', function(done) {
-        var stream = props({ namespace: '', space: 2 });
-
-        stream.once('data', function(file) {
-            file.contents.toString('utf8').should.equal('{\n  "name": "Gulp",\n  "message": "Hello!"\n}');
-            file.path.should.equal('test/demo.json');
-            done();
+        beforeEach(function() {
+            validFile = new File({
+                path: 'test/valid.properties',
+                cwd: 'test',
+                contents: fs.readFileSync('test/valid.properties')
+            });
+            emptyFile = new File({
+                path: 'test/empty.properties',
+                cwd: 'test',
+                contents: new Buffer('')
+            });
+            specialFile = new File({
+                path: 'test/special.properties',
+                cwd: 'test',
+                contents: fs.readFileSync('test/special.properties')
+            });
+            nullFile = new File({
+                cwd: 'test',
+                contents: null
+            });
         });
 
-        stream.write(demoFileBuffer);
-        stream.end();
-    });
+        it('should return JSON when namespace is empty', function(done) {
+            var stream = props({ namespace: '' });
 
-    it('should return pretty JSON when namespace is empty and space=4 option defined', function(done) {
-        var stream = props({ namespace: '', space: 4 });
-
-        stream.once('data', function(file) {
-            file.contents.toString('utf8').should.equal('{\n    "name": "Gulp",\n    "message": "Hello!"\n}');
-            file.path.should.equal('test/demo.json');
-            done();
-        });
-
-        stream.write(demoFileBuffer);
-        stream.end();
-    });
-
-    it('should use default namespace when not specified', function(done) {
-        var stream = props();
-
-        stream.once('data', function(file) {
-            file.contents.toString('utf8').should.equal('var config = config || {};\nconfig[\'name\'] = \'Gulp\';\nconfig[\'message\'] = \'Hello!\';\n');
-            file.path.should.equal('test/demo.js');
-            done();
-        });
-
-        stream.write(demoFileBuffer);
-        stream.end();
-    });
-
-    it('should use custom namespace', function(done) {
-        var stream = props({ namespace: 'state' });
-
-        stream.once('data', function(file) {
-            file.contents.toString('utf8').should.equal('var state = state || {};\nstate[\'name\'] = \'Gulp\';\nstate[\'message\'] = \'Hello!\';\n');
-            file.path.should.equal('test/demo.js');
-            done();
-        });
-
-        stream.write(demoFileBuffer);
-        stream.end();
-    });
-
-    it('should reject reserved word for namespace', function(done) {
-        var stream = props({ namespace: 'void' });
-
-        stream.once('error', function(error) {
-            error.message.should.equal('namespace option cannot be a reserved word.');
-            done();
-        });
-
-        stream.write(demoFileBuffer);
-        stream.end();
-    });
-
-    it('should rename the namespace if is not a valid identifier', function(done) {
-        var stream = props({ namespace: '123' });
-
-        stream.once('data', function(file) {
-            file.contents.toString('utf8').should.equal('var _123 = _123 || {};\n_123[\'name\'] = \'Gulp\';\n_123[\'message\'] = \'Hello!\';\n');
-            file.path.should.equal('test/demo.js');
-            done();
-        });
-
-        stream.write(demoFileBuffer);
-        stream.end();
-    });
-
-    it('should work with streams', function(done) {
-        var stream = props();
-
-        stream.on('data', function(file) {
-            file.pipe(es.wait(function(err, data) {
-                data.toString('utf8').should.equal('var config = config || {};\nconfig[\'name\'] = \'Gulp\';\nconfig[\'message\'] = \'Hello!\';\n');
-                file.path.should.equal('test/demo.js');
+            stream.once('data', function(file) {
+                file.contents.toString('utf8').should.equal('{"name":"Gulp","message":"Hello!"}');
+                path.extname(file.path).should.equal('.json');
                 done();
-            }));
+            });
+
+            stream.write(validFile);
+            stream.end();
         });
 
-        stream.write(demoFileStream);
-        stream.end();
+        it('should return pretty JSON when namespace is empty and space=2 option defined', function(done) {
+            var stream = props({ namespace: '', space: 2 });
+
+            stream.once('data', function(file) {
+                file.contents.toString('utf8').should.equal('{\n  "name": "Gulp",\n  "message": "Hello!"\n}');
+                path.extname(file.path).should.equal('.json');
+                done();
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should return pretty JSON when namespace is empty and space=4 option defined', function(done) {
+            var stream = props({ namespace: '', space: 4 });
+
+            stream.once('data', function(file) {
+                file.contents.toString('utf8').should.equal('{\n    "name": "Gulp",\n    "message": "Hello!"\n}');
+                path.extname(file.path).should.equal('.json');
+                done();
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should use default namespace when not specified', function(done) {
+            var stream = props();
+
+            stream.once('data', function(file) {
+                file.contents.toString('utf8').should.equal('var config = config || {};\nconfig[\'name\'] = \'Gulp\';\nconfig[\'message\'] = \'Hello!\';\n');
+                path.extname(file.path).should.equal('.js');
+                done();
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should use custom namespace', function(done) {
+            var stream = props({ namespace: 'state' });
+
+            stream.once('data', function(file) {
+                file.contents.toString('utf8').should.equal('var state = state || {};\nstate[\'name\'] = \'Gulp\';\nstate[\'message\'] = \'Hello!\';\n');
+                path.extname(file.path).should.equal('.js');
+                done();
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should reject reserved word for namespace', function(done) {
+            var stream = props({ namespace: 'void' });
+
+            stream.once('error', function(error) {
+                error.message.should.equal('namespace option cannot be a reserved word.');
+                done();
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should rename the namespace if is not a valid identifier', function(done) {
+            var stream = props({ namespace: '123' });
+
+            stream.once('data', function(file) {
+                file.contents.toString('utf8').should.equal('var _123 = _123 || {};\n_123[\'name\'] = \'Gulp\';\n_123[\'message\'] = \'Hello!\';\n');
+                path.extname(file.path).should.equal('.js');
+                done();
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should handle special characters properly', function(done) {
+            var stream = props({ namespace: 'state' });
+
+            stream.once('data', function(file) {
+                file.contents.toString('utf8').should.equal('var state = state || {};\nstate[\'a#b!c=d:\'] = \'AAAA#BBBB!CCCC=DDDD:EEEE\';\n');
+                path.extname(file.path).should.equal('.js');
+                done();
+            });
+
+            stream.write(specialFile);
+            stream.end();
+        });
+
+        it('should do nothing when contents is null', function(done) {
+            var stream = props();
+
+            stream.once('data', function(file) {
+                file.isNull().should.equal(true);
+                path.extname(file.path).should.equal('');
+                done();
+            });
+
+            stream.write(nullFile);
+            stream.end();
+        });
+    });
+
+    describe('in stream mode', function() {
+
+        beforeEach(function() {
+            validFile = new File({
+                path: 'test/valid.properties',
+                cwd: 'test',
+                contents: fs.createReadStream('test/valid.properties')
+            });
+            emptyFile = new File({
+                path: 'test/empty.properties',
+                cwd: 'test',
+                contents: fs.createReadStream('test/empty.properties')
+            });
+            specialFile = new File({
+                path: 'test/special.properties',
+                cwd: 'test',
+                contents: fs.createReadStream('test/special.properties')
+            });
+        });
+
+        it('should return JSON when namespace is empty', function(done) {
+            var stream = props({ namespace: '' });
+
+            stream.once('data', function(file) {
+                file.contents.pipe(es.wait(function(err, data) {
+                    data.toString('utf8').should.equal('{"name":"Gulp","message":"Hello!"}');
+                    path.extname(file.path).should.equal('.json');
+                    done();
+                }));
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should return pretty JSON when namespace is empty and space=2 option defined', function(done) {
+            var stream = props({ namespace: '', space: 2 });
+
+            stream.once('data', function(file) {
+                file.contents.pipe(es.wait(function(err, data) {
+                    data.toString('utf8').should.equal('{\n  "name": "Gulp",\n  "message": "Hello!"\n}');
+                    path.extname(file.path).should.equal('.json');
+                    done();
+                }));
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should return pretty JSON when namespace is empty and space=4 option defined', function(done) {
+            var stream = props({ namespace: '', space: 4 });
+
+            stream.once('data', function(file) {
+                file.contents.pipe(es.wait(function(err, data) {
+                    data.toString('utf8').should.equal('{\n    "name": "Gulp",\n    "message": "Hello!"\n}');
+                    path.extname(file.path).should.equal('.json');
+                    done();
+                }));
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should use default namespace when not specified', function(done) {
+            var stream = props();
+
+            stream.once('data', function(file) {
+                file.contents.pipe(es.wait(function(err, data) {
+                    data.toString('utf8').should.equal('var config = config || {};\nconfig[\'name\'] = \'Gulp\';\nconfig[\'message\'] = \'Hello!\';\n');
+                    path.extname(file.path).should.equal('.js');
+                    done();
+                }));
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should use custom namespace', function(done) {
+            var stream = props({ namespace: 'state' });
+
+            stream.once('data', function(file) {
+                file.contents.pipe(es.wait(function(err, data) {
+                    data.toString('utf8').should.equal('var state = state || {};\nstate[\'name\'] = \'Gulp\';\nstate[\'message\'] = \'Hello!\';\n');
+                    path.extname(file.path).should.equal('.js');
+                    done();
+                }));
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should reject reserved word for namespace', function(done) {
+            var stream = props({ namespace: 'void' });
+
+            stream.once('error', function(error) {
+                error.message.should.equal('namespace option cannot be a reserved word.');
+                done();
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should rename the namespace if is not a valid identifier', function(done) {
+            var stream = props({ namespace: '123' });
+
+            stream.once('data', function(file) {
+                file.contents.pipe(es.wait(function(err, data) {
+                    data.toString('utf8').should.equal('var _123 = _123 || {};\n_123[\'name\'] = \'Gulp\';\n_123[\'message\'] = \'Hello!\';\n');
+                    path.extname(file.path).should.equal('.js');
+                    done();
+                }));
+            });
+
+            stream.write(validFile);
+            stream.end();
+        });
+
+        it('should handle special characters properly', function(done) {
+            var stream = props({ namespace: 'state' });
+
+            stream.once('data', function(file) {
+                file.contents.pipe(es.wait(function(err, data) {
+                    data.toString('utf8').should.equal('var state = state || {};\nstate[\'a#b!c=d:\'] = \'AAAA#BBBB!CCCC=DDDD:EEEE\';\n');
+                    path.extname(file.path).should.equal('.js');
+                    done();
+                }));
+            });
+
+            stream.write(specialFile);
+            stream.end();
+        });
     });
 });

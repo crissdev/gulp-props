@@ -1,6 +1,6 @@
 {
   "name": "gulp-props",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Convert Java .properties to JSON",
   "main": "index.js",
   "scripts": {
@@ -26,7 +26,7 @@
     "type": "git",
     "url": "https://github.com/CrissDev/gulp-props.git"
   },
-  "author": "crissdev <t4013-github@yahoo.com> (http://www.crissdev.com/)",
+  "author": "crissdev <criss.trifan@gmail.com> (http://www.crissdev.com)",
   "license": "MIT",
   "homepage": "https://github.com/CrissDev/gulp-props",
   "bugs": {
@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "assert": "~1.1.2",
-    "event-stream": "^3.1.7",
+    "event-stream": "~3.1.7",
     "mocha": "~1.21.4",
     "should": "~4.0.4"
   }

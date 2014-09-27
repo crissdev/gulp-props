@@ -22,11 +22,11 @@ gulp.src('./src/*.properties')
   .pipe(props())
   .pipe(gulp.dest('./dist/'))
 
-gulp.src('./src/*.yml')
+gulp.src('./src/*.properties')
   .pipe(props({ space: 2 }))
   .pipe(gulp.dest('./dist/'))
 
-gulp.src('./src/*.yml')
+gulp.src('./src/*.properties')
   .pipe(props({ namespace: 'state' }))
   .pipe(gulp.dest('./dist/'))
 ```

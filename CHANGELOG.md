@@ -1,3 +1,10 @@
+# 1.1.1 (2014-09-27)
+
+## Features
+
+- add more tests (buffer and stream mode)
+
+
 # 1.1.0 (2014-09-26)
 
 ## Features
