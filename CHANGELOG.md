@@ -1,3 +1,8 @@
+# 1.1.2 (2014-10-04)
+
+- use new Github user name
+
+
 # 1.1.1 (2014-09-27)
 
 ## Features
