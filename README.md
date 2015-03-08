@@ -1,8 +1,8 @@
 #[gulp](https://github.com/gulpjs/gulp)-props
 
-[![NPM version](https://badge.fury.io/js/gulp-props.png)](http://badge.fury.io/js/gulp-props)
-[![Build Status](https://travis-ci.org/crissdev/gulp-props.png?branch=master)](https://travis-ci.org/crissdev/gulp-props)
-[![Dependency Status](https://david-dm.org/crissdev/gulp-props.png)](https://david-dm.org/crissdev/gulp-props)
+[![npm version](https://badge.fury.io/js/gulp-props.svg)](http://badge.fury.io/js/gulp-props)
+[![Build Status](https://travis-ci.org/crissdev/gulp-props.svg?branch=master)](https://travis-ci.org/crissdev/gulp-props)
+[![Dependency Status](https://david-dm.org/crissdev/gulp-props.svg)](https://david-dm.org/crissdev/gulp-props)
 
 > A [Gulp](https://github.com/gulpjs/gulp) plugin to convert [Java .properties](http://en.wikipedia.org/wiki/.properties) to [JSON](http://en.wikipedia.org/wiki/JSON)
 
