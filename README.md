@@ -58,7 +58,7 @@ Control spacing in the resulting output. It has the same usage as for [JSON.stri
 _The option is used only when namespace option is an empty string._
 
 
-#### options.replace
+#### options.replacer
 
 Type: `Function` or `Array`
 
