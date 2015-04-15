@@ -69,6 +69,16 @@ Further transform the resulting output. It has the same usage as for [JSON.strin
 _The option is used only when namespace option is an empty string._
 
 
+#### options.appendExt
+
+Type: `Boolean`
+
+Default: `false`
+
+Append the extension (`.js` || `.json`) instead of replacing it.
+
+_Useful if the property files doens't have an extension._
+
 ## License
 
 MIT © [Cristian Trifan](http://crissdev.com)
