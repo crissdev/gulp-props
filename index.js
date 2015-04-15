@@ -61,7 +61,7 @@ function outputFilename(filepath, options) {
 
 module.exports = function(options) {
     var self = this;
-    options = extend({ namespace: 'config', space: null, replacer: null, replaceExt: false }, options);
+    options = extend({ namespace: 'config', space: null, replacer: null, appendExt: false }, options);
 
     return through.obj(function(file, enc, callback) {
         if (options.namespace) {
