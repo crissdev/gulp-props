@@ -1,3 +1,8 @@
+# 1.2.0 (2015-04-15)
+
+- add support for property files without a proper extensions
+
+
 # 1.1.2 (2014-10-04)
 
 - use new Github user name
