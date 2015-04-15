@@ -52,10 +52,16 @@ function props2json(buffer, options) {
     return new Buffer(output);
 }
 
+function outputFilename(filepath, options) {
+    return (options.appendExt) ?
+        filepath + (options.namespace ? '.js' : '.json') :
+            gutil.replaceExtension(filepath, options.namespace ? '.js' : '.json');
+}
+
 
 module.exports = function(options) {
     var self = this;
-    options = extend({ namespace: 'config', space: null, replacer: null }, options);
+    options = extend({ namespace: 'config', space: null, replacer: null, replaceExt: false }, options);
 
     return through.obj(function(file, enc, callback) {
         if (options.namespace) {
@@ -76,7 +82,7 @@ module.exports = function(options) {
                     try {
                         cb(null, props2json(buf, options));
                         file.contents = props2json(file.contents, options);
-                        file.path = gutil.replaceExtension(file.path, options.namespace ? '.js' : '.json');
+                        file.path = outputFilename(file.path, options);
                     }
                     catch (error) {
                         self.emit('error', new PluginError(PLUGIN_NAME, error.message));
@@ -88,7 +94,7 @@ module.exports = function(options) {
         else if (file.isBuffer()) {
             try {
                 file.contents = props2json(file.contents, options);
-                file.path = gutil.replaceExtension(file.path, options.namespace ? '.js' : '.json');
+                file.path = outputFilename(file.path, options);
             }
             catch (error) {
                 this.emit('error', new PluginError(PLUGIN_NAME, error.message));
