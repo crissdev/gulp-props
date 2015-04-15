@@ -16,6 +16,7 @@ describe('gulp-props', function() {
     // Test files
 
     var validFile,
+        noExtFile,
         emptyFile,
         specialFile,
         nullFile;
@@ -29,6 +30,11 @@ describe('gulp-props', function() {
                 cwd: 'test',
                 contents: fs.readFileSync('test/valid.properties')
             });
+            noExtFile = new File({
+                path: 'test/noExt.1',
+                cwd: 'test',
+                contents: new Buffer('test/noExt.1')
+            });
             emptyFile = new File({
                 path: 'test/empty.properties',
                 cwd: 'test',
@@ -39,6 +45,7 @@ describe('gulp-props', function() {
                 cwd: 'test',
                 contents: fs.readFileSync('test/special.properties')
             });
+
             nullFile = new File({
                 cwd: 'test',
                 contents: null
@@ -132,6 +139,18 @@ describe('gulp-props', function() {
             });
 
             stream.write(validFile);
+            stream.end();
+        });
+
+        it('should append the extension instead of replacing it if appendExt flag is active', function(done) {
+            var stream = props({ appendExt: true });
+
+            stream.once('data', function(file) {
+                path.basename(file.path).should.equal('noExt.1.js');
+                done();
+            });
+
+            stream.write(noExtFile);
             stream.end();
         });
 
