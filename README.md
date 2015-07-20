@@ -18,14 +18,17 @@ npm install --save-dev gulp-props
 ```js
 var props = require('gulp-props');
 
+// Generate a .js file with default namespace (config)
 gulp.src('./src/*.properties')
   .pipe(props())
   .pipe(gulp.dest('./dist/'))
 
+// Generate a .json file indented with 2 spaces
 gulp.src('./src/*.properties')
-  .pipe(props({ space: 2 }))
+  .pipe(props({ namespace: '', space: 2 }))
   .pipe(gulp.dest('./dist/'))
 
+// Generate a .js file with a custom namespace (state)
 gulp.src('./src/*.properties')
   .pipe(props({ namespace: 'state' }))
   .pipe(gulp.dest('./dist/'))
@@ -46,6 +49,7 @@ Default: `config`
 The namespace to use when defining properties. Javascript reserved words cannot be used here.
 Invalid identifiers will be adjusted to be valid, and a warning will be printed in the console.
 
+**Note**: To force a `JSON` output set this option to an empty string.
 
 #### options.space
 
