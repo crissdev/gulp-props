@@ -26,6 +26,18 @@ function getValidIdentifier(str) {
     return identifier;
 }
 
+function addProperty(obj, str, val) {
+    str = str.split(".");
+    while (str.length > 1) {
+        var prop = str.shift();
+        if (!obj.hasOwnProperty(prop)) {
+            obj[prop] = {};
+        }
+        obj = obj[prop];
+    }
+    return obj[str.shift()] = val;
+}
+
 function props2json(buffer, options) {
     var props = propsParser.parse(buffer.toString('utf8')),
         output;
@@ -46,6 +58,13 @@ function props2json(buffer, options) {
         });
         output = output.join('\n') + '\n';
     }
+    else if (options.createObject) {
+        var obj = {};
+        Object.keys(props).forEach(function(key) {
+            addProperty(obj, key, props[key]);
+        });
+        output = JSON.stringify(obj, options.replacer, options.space);
+    }
     else {
         output = JSON.stringify(props, options.replacer, options.space);
     }
@@ -61,7 +80,7 @@ function outputFilename(filepath, options) {
 
 module.exports = function(options) {
     var self = this;
-    options = extend({ namespace: 'config', space: null, replacer: null, appendExt: false }, options);
+    options = extend({ namespace: 'config', space: null, replacer: null, appendExt: false, createObject: false }, options);
 
     return through.obj(function(file, enc, callback) {
         if (options.namespace) {
