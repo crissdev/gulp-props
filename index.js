@@ -38,31 +38,43 @@ function addProperty(obj, str, val) {
     return obj[str.shift()] = val;
 }
 
+function createObjectFromProps(props) {
+    var obj = {};
+    Object.keys(props).forEach(function(key) {
+        addProperty(obj, key, props[key]);
+    });
+    return obj;
+}
+
 function props2json(buffer, options) {
     var props = propsParser.parse(buffer.toString('utf8')),
-        output;
+        output,
+        obj;
 
     if (options.namespace) {
-        output = ['var ' + options.namespace + ' = ' + options.namespace + ' || {};'];
-
-        Object.keys(props).forEach(function(key) {
-            output.push(gutil.template(entryTemplate, {
-                file: {
-                },
-                data: {
-                    ns: options.namespace,
-                    key: key.replace(rKey, '\\$1'),
-                    value: props[key].replace(rValue, '\\$1')
-                }
-            }));
-        });
-        output = output.join('\n') + '\n';
+        if (options.nestingDelimiter) {
+            output = ['var ' + options.namespace + ' = ' + options.namespace + ' || {};'];
+            obj = createObjectFromProps(props);
+            output.push(options.namespace + '.' + options.nestingDelimiter + ' = ' + JSON.stringify(obj[options.nestingDelimiter]));
+            output = output.join('\n') + '\n';
+        } else {
+            output = ['var ' + options.namespace + ' = ' + options.namespace + ' || {};'];
+            Object.keys(props).forEach(function(key) {
+                output.push(gutil.template(entryTemplate, {
+                    file: {
+                    },
+                    data: {
+                        ns: options.namespace,
+                        key: key.replace(rKey, '\\$1'),
+                        value: props[key].replace(rValue, '\\$1')
+                    }
+                }));
+            });
+            output = output.join('\n') + '\n';
+        }
     }
     else if (options.createObject) {
-        var obj = {};
-        Object.keys(props).forEach(function(key) {
-            addProperty(obj, key, props[key]);
-        });
+        obj = createObjectFromProps(props);
         output = JSON.stringify(obj, options.replacer, options.space);
     }
     else {
@@ -80,7 +92,7 @@ function outputFilename(filepath, options) {
 
 module.exports = function(options) {
     var self = this;
-    options = extend({ namespace: 'config', space: null, replacer: null, appendExt: false, createObject: false }, options);
+    options = extend({ namespace: 'config', space: null, replacer: null, appendExt: false, createObject: false, nestingDelimiter: null }, options);
 
     return through.obj(function(file, enc, callback) {
         if (options.namespace) {
