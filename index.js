@@ -1,16 +1,15 @@
 'use strict';
 
-var gutil = require('gulp-util'),
-    through = require('through2'),
-    extend = require('extend'),
-    propsParser = require('properties-parser'),
-    isKeyword = require('is-keyword-js'),
-    BufferStreams = require('bufferstreams'),
-    PluginError = gutil.PluginError,
-    PLUGIN_NAME = 'gulp-props',
-    entryTemplate = '<%= data.ns%>[\'<%=data.key%>\'] = \'<%= data.value%>\';',
-    rKey = /([\\'])/g,
-    rValue = /([\\"'])/g;
+var gutil           = require('gulp-util');
+var through         = require('through2');
+var propsParser     = require('properties-parser');
+var isKeyword       = require('is-keyword-js');
+var BufferStreams   = require('bufferstreams');
+var PluginError     = gutil.PluginError;
+var PLUGIN_NAME     = 'gulp-props';
+var entryTemplate   = "<%= data.ns%>['<%=data.key%>'] = '<%= data.value%>';";
+var rKey            = /(?:[\\'])/g;
+var rValue          = /(?:[\\"'])/g;
 
 
 function getValidIdentifier(str) {
@@ -58,17 +57,25 @@ function outputFilename(filepath, options) {
             gutil.replaceExtension(filepath, options.namespace ? '.js' : '.json');
 }
 
+function mergeOptions(options, userOptions) {
+    if (userOptions) {
+        Object.keys(options).forEach(function(key) {
+            if (typeof userOptions[key] !== 'undefined') {
+                options[key] = userOptions[key];
+            }
+        });
+    }
+    return options;
+}
 
 module.exports = function(options) {
-    var self = this;
-    options = extend({ namespace: 'config', space: null, replacer: null, appendExt: false }, options);
+    options = mergeOptions({ namespace: 'config', space: null, replacer: null, appendExt: false }, options);
 
     return through.obj(function(file, enc, callback) {
         if (options.namespace) {
             if (isKeyword(options.namespace)) {
-                this.emit('error', new PluginError(PLUGIN_NAME,
-                    'namespace option cannot be a reserved word.'));
-                return callback();
+                callback(new PluginError(PLUGIN_NAME, 'namespace option cannot be a reserved word.'));
+                return;
             }
             options.namespace = getValidIdentifier(options.namespace);
         }
@@ -76,17 +83,16 @@ module.exports = function(options) {
         if (file.isStream()) {
             file.contents = file.contents.pipe(new BufferStreams(function(err, buf, cb) {
                 if (err) {
-                    self.emit('error', new PluginError(PLUGIN_NAME, err.message));
+                    cb(new PluginError(PLUGIN_NAME, err, { showStack: true }));
                 }
                 else {
                     try {
-                        cb(null, props2json(buf, options));
-                        file.contents = props2json(file.contents, options);
+                        var parsed = props2json(buf, options);
                         file.path = outputFilename(file.path, options);
+                        cb(null, parsed);
                     }
                     catch (error) {
-                        self.emit('error', new PluginError(PLUGIN_NAME, error.message));
-                        cb(error);
+                        cb(new PluginError(PLUGIN_NAME, error, { showStack: true }));
                     }
                 }
             }));
@@ -97,11 +103,11 @@ module.exports = function(options) {
                 file.path = outputFilename(file.path, options);
             }
             catch (error) {
-                this.emit('error', new PluginError(PLUGIN_NAME, error.message));
-                return callback();
+                callback(new PluginError(PLUGIN_NAME, error, { showStack: true }));
+                return;
             }
         }
         this.push(file);
-        return callback();
+        callback();
     });
 };

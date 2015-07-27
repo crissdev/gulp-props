@@ -51,6 +51,7 @@ Invalid identifiers will be adjusted to be valid, and a warning will be printed 
 
 **Note**: To force a `JSON` output set this option to an empty string.
 
+
 #### options.space
 
 Type: `Number` or `String`
@@ -81,7 +82,7 @@ Default: `false`
 
 Append the extension (`.js` or `.json`) instead of replacing it.
 
-_Useful if the property files doens't have an extension._
+_Useful if the property file doesn't have an extension._
 
 ## License
 
