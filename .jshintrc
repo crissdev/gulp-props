@@ -5,7 +5,6 @@
     "trailing":  true,
     "forin":     true,
     "noempty":   true,
-    "quotmark":  "single",
     "eqeqeq":    true,
     "strict":    true,
     "undef":     true,

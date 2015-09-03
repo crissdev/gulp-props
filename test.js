@@ -1,3 +1,5 @@
+/*global describe, it*/
+
 var props = require('./');
 var gutil = require('gulp-util');
 var es = require('event-stream');
