@@ -4,6 +4,7 @@ var gutil         = require('gulp-util');
 var through       = require('through2');
 var propsParser   = require('properties-parser');
 var isKeyword     = require('is-keyword-js');
+var xtend         = require('xtend');
 var BufferStreams = require('bufferstreams');
 var PluginError   = gutil.PluginError;
 var PLUGIN_NAME   = 'gulp-props';
@@ -55,19 +56,8 @@ function outputFilename(filepath, options) {
     gutil.replaceExtension(filepath, options.namespace ? '.js' : '.json');
 }
 
-function mergeOptions(options, userOptions) {
-  if (userOptions) {
-    Object.keys(options).forEach(function(key) {
-      if (typeof userOptions[key] !== 'undefined') {
-        options[key] = userOptions[key];
-      }
-    });
-  }
-  return options;
-}
-
 module.exports = function(options) {
-  options = mergeOptions({namespace: 'config', space: null, replacer: null, appendExt: false}, options);
+  options = xtend({namespace: 'config', space: null, replacer: null, appendExt: false}, options);
 
   return through.obj(function(file, enc, callback) {
     if (options.namespace) {

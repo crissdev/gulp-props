@@ -41,7 +41,8 @@
     "gulp-util": "^3.0.6",
     "is-keyword-js": "^1.0.3",
     "properties-parser": "^0.3.0",
-    "through2": "^2.0.0"
+    "through2": "^2.0.0",
+    "xtend": "^4.0.0"
   },
   "devDependencies": {
     "event-stream": "^3.3.1",
