@@ -62,16 +62,17 @@ module.exports = function(options) {
   return through.obj(function(file, enc, callback) {
     if (options.namespace) {
       if (isKeyword(options.namespace)) {
-        callback(new PluginError(PLUGIN_NAME, 'namespace option cannot be a reserved word.'));
-        return;
+        this.emit('error', new PluginError(PLUGIN_NAME, 'namespace option cannot be a reserved word.'));
+        return callback();
       }
       options.namespace = getValidIdentifier(options.namespace);
     }
 
     if (file.isStream()) {
+      var _this = this;
       var streamer = new BufferStreams(function(err, buf, cb) {
         if (err) {
-          cb(new PluginError(PLUGIN_NAME, err, {showStack: true}));
+          _this.emit('error', new PluginError(PLUGIN_NAME, err, {showStack: true}));
         }
         else {
           try {
@@ -80,11 +81,10 @@ module.exports = function(options) {
             cb(null, parsed);
           }
           catch (error) {
-            cb(new PluginError(PLUGIN_NAME, error, {showStack: true}));
+            _this.emit('error', new PluginError(PLUGIN_NAME, error, {showStack: true}));
           }
         }
       });
-      streamer.on('error', callback);
       file.contents = file.contents.pipe(streamer);
     }
     else if (file.isBuffer()) {
@@ -93,10 +93,11 @@ module.exports = function(options) {
         file.path = outputFilename(file.path, options);
       }
       catch (error) {
-        callback(new PluginError(PLUGIN_NAME, error, {showStack: true}));
-        return;
+        this.emit('error', new PluginError(PLUGIN_NAME, error, {showStack: true}));
+        return callback();
       }
     }
-    callback(null, file);
+    this.push(file);
+    callback();
   });
 };
