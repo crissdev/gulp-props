@@ -1,4 +1,4 @@
-#[gulp](https://github.com/gulpjs/gulp)-props
+# [gulp](https://github.com/gulpjs/gulp)-props
 
 [![npm version](https://badge.fury.io/js/gulp-props.svg)](http://badge.fury.io/js/gulp-props)
 [![Build Status](https://travis-ci.org/crissdev/gulp-props.svg?branch=master)](https://travis-ci.org/crissdev/gulp-props)
