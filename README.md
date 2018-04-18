@@ -1,7 +1,9 @@
 # [gulp](https://github.com/gulpjs/gulp)-props
 
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 [![npm version](https://badge.fury.io/js/gulp-props.svg)](http://badge.fury.io/js/gulp-props)
 [![Build Status](https://travis-ci.org/crissdev/gulp-props.svg?branch=master)](https://travis-ci.org/crissdev/gulp-props)
+[![Build status](https://ci.appveyor.com/api/projects/status/7qnfbed3lts8xgvp/branch/master?svg=true&passingText=master%20-%20OK)](https://ci.appveyor.com/project/crissdev/gulp-props/branch/master)
 [![Dependency Status](https://david-dm.org/crissdev/gulp-props.svg)](https://david-dm.org/crissdev/gulp-props)
 
 > A [Gulp](https://github.com/gulpjs/gulp) plugin to convert [Java .properties](http://en.wikipedia.org/wiki/.properties) to [JSON](http://en.wikipedia.org/wiki/JSON)
@@ -16,7 +18,7 @@ npm install --save-dev gulp-props
 ## Usage
 
 ```js
-var props = require('gulp-props');
+const props = require('gulp-props');
 
 // Generate a .js file with default namespace (config)
 gulp.src('./src/*.properties')
@@ -82,8 +84,8 @@ Default: `false`
 
 Append the extension (`.js` or `.json`) instead of replacing it.
 
-_Useful if the property file doesn't have an extension._
+Useful if the property file doesn't have an extension.
 
 ## License
 
-MIT © [Cristian Trifan](http://crissdev.com)
+MIT © [Cristian Trifan](https://crissdev.com)

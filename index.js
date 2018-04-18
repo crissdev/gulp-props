@@ -1,103 +1,134 @@
-'use strict';
+'use strict'
 
-var gutil         = require('gulp-util');
-var through       = require('through2');
-var propsParser   = require('properties-parser');
-var isKeyword     = require('is-keyword-js');
-var xtend         = require('xtend');
-var BufferStreams = require('bufferstreams');
-var PluginError   = gutil.PluginError;
-var PLUGIN_NAME   = 'gulp-props';
-var entryTemplate = "<%= data.ns%>['<%=data.key%>'] = '<%= data.value%>';";
-var rKey          = /(?:[\\'])/g;
-var rValue        = /(?:[\\"'])/g;
+const propsParser = require('properties-parser')
+const through = require('through2')
+const isKeyword = require('is-keyword-js')
+const BufferStreams = require('bufferstreams')
+const replaceExt = require('replace-ext')
+const PluginError = require('plugin-error')
+const assign = require('object-assign')
+const template = require('lodash.template')
+const fancyLog = require('fancy-log')
 
+const PLUGIN_NAME = 'gulp-props'
+const compiledEntryTemplate = template(`<%=ns%>['<%=key%>'] = '<%=value%>';`)
+const rKey = /(?:[\\'])/g
+const rValue = /(?:[\\"'])/g
 
-function getValidIdentifier(str) {
-  var identifier = str.replace(/[^a-z0-9_$]/ig, '_');
+module.exports = function (options) {
+  options = assign({namespace: 'config', space: null, replacer: null, appendExt: false}, options)
+
+  return through.obj(function (file, enc, callback) {
+    const stream = this
+
+    file.contents = getFileContents(file, options, stream, callback)
+
+    stream.push(file)
+    callback()
+  })
+}
+
+function getValidIdentifier (str) {
+  let identifier = str.replace(/[^a-z0-9_$]/ig, '_')
 
   if (/^[0-9]+/.test(identifier)) {
-    identifier = '_' + identifier;
+    identifier = '_' + identifier
   }
   if (identifier !== str) {
-    gutil.log(gutil.colors.yellow(PLUGIN_NAME + ': namespace option was renamed to ' +
-      identifier + ' to be a valid variable name.'));
+    fancyLog.warn(`${PLUGIN_NAME}: namespace option was renamed to ${identifier} to be a valid variable name.`)
   }
-  return identifier;
+  return identifier
 }
 
-function props2json(buffer, options) {
-  var props = propsParser.parse(buffer.toString('utf8')),
-    output;
+function convertProps (file, buf, options) {
+  if (options.namespace) {
+    if (isKeyword(options.namespace)) {
+      return getError('namespace option cannot be a reserved word.')
+    }
+    options.namespace = getValidIdentifier(options.namespace)
+  }
+  try {
+    file.path = outputFilename(file.path, options)
+    return props2json(buf, options)
+  } catch (error) {
+    return getError(error)
+  }
+}
+
+function props2json (buffer, options) {
+  const props = propsParser.parse(buffer.toString('utf8'))
+  let jsonValue
 
   if (options.namespace) {
-    output = ['var ' + options.namespace + ' = ' + options.namespace + ' || {};'];
+    const output = [`var ${options.namespace} = ${options.namespace} || {};`]
 
-    Object.keys(props).forEach(function(key) {
-      output.push(gutil.template(entryTemplate, {
-        file: {},
-        data: {
-          ns: options.namespace,
-          key: key.replace(rKey, '\\$1'),
-          value: props[key].replace(rValue, '\\$1')
-        }
-      }));
-    });
-    output = output.join('\n') + '\n';
+    for (const key of Object.keys(props)) {
+      const fragment = compiledEntryTemplate({
+        ns: options.namespace,
+        key: key.replace(rKey, '\\$1'),
+        value: props[key].replace(rValue, '\\$1')
+      })
+      output.push(fragment)
+    }
+
+    output.push('')
+    jsonValue = output.join('\n')
+  } else {
+    jsonValue = JSON.stringify(props, options.replacer, options.space)
   }
-  else {
-    output = JSON.stringify(props, options.replacer, options.space);
-  }
-  return new Buffer(output);
+  return Buffer.from(jsonValue)
 }
 
-function outputFilename(filepath, options) {
-  return (options.appendExt) ? filepath + (options.namespace ? '.js' : '.json') :
-    gutil.replaceExtension(filepath, options.namespace ? '.js' : '.json');
+function outputFilename (filePath, options) {
+  const ext = options.namespace ? '.js' : '.json'
+  return options.appendExt ? filePath + ext : replaceExt(filePath, ext)
 }
 
-module.exports = function(options) {
-  options = xtend({namespace: 'config', space: null, replacer: null, appendExt: false}, options);
+function getFileContents (file, options, stream, callback) {
+  if (file.isNull()) {
+    return file.contents
+  }
 
-  return through.obj(function(file, enc, callback) {
-    if (options.namespace) {
-      if (isKeyword(options.namespace)) {
-        this.emit('error', new PluginError(PLUGIN_NAME, 'namespace option cannot be a reserved word.'));
-        return callback();
-      }
-      options.namespace = getValidIdentifier(options.namespace);
+  if (file.isBuffer()) {
+    return getBufferContents(file, options, stream, callback)
+  }
+
+  if (file.isStream()) {
+    return getStreamContents(file, options, stream)
+  }
+}
+
+function getBufferContents (file, options, stream, callback) {
+  const output = convertProps(file, file.contents, options)
+
+  if (output instanceof PluginError) {
+    stream.emit('error', output)
+    return callback()
+  }
+
+  return output
+}
+
+function getStreamContents (file, options, stream) {
+  const streamer = new BufferStreams(function (err, buf, callback) {
+    if (err) {
+      stream.emit('error', getError(err))
+      return callback()
     }
 
-    if (file.isStream()) {
-      var _this = this;
-      var streamer = new BufferStreams(function(err, buf, cb) {
-        if (err) {
-          _this.emit('error', new PluginError(PLUGIN_NAME, err, {showStack: true}));
-        }
-        else {
-          try {
-            var parsed = props2json(buf, options);
-            file.path = outputFilename(file.path, options);
-            cb(null, parsed);
-          }
-          catch (error) {
-            _this.emit('error', new PluginError(PLUGIN_NAME, error, {showStack: true}));
-          }
-        }
-      });
-      file.contents = file.contents.pipe(streamer);
+    const output = convertProps(file, buf, options)
+
+    if (output instanceof PluginError) {
+      stream.emit('error', output)
+      return callback()
     }
-    else if (file.isBuffer()) {
-      try {
-        file.contents = props2json(file.contents, options);
-        file.path = outputFilename(file.path, options);
-      }
-      catch (error) {
-        this.emit('error', new PluginError(PLUGIN_NAME, error, {showStack: true}));
-        return callback();
-      }
-    }
-    this.push(file);
-    callback();
-  });
-};
+
+    callback(null, output)
+  })
+
+  return file.contents.pipe(streamer)
+}
+
+function getError (error) {
+  return new PluginError(PLUGIN_NAME, error, {showStack: true})
+}
