@@ -1,6 +1,6 @@
 {
   "name": "gulp-props",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Convert Java .properties to JSON",
   "main": "index.js",
   "scripts": {

@@ -1,3 +1,12 @@
+# 2.0.0 (2018-04-18)
+
+- remove deprecated gulp-util dependency
+- target node>=6.9.5
+- (additionally) run tests on AppVeyor CI
+- use standard code style
+- upgrade dependencies
+
+
 # 1.2.0 (2015-04-15)
 
 - add support for property files without a proper extensions
