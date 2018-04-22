@@ -1,4 +1,4 @@
-# [gulp](https://github.com/gulpjs/gulp)-props
+# gulp-props
 
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 [![npm version](https://badge.fury.io/js/gulp-props.svg)](http://badge.fury.io/js/gulp-props)
