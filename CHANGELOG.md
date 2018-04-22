@@ -1,3 +1,9 @@
+# 2.0.1 (2018-04-22)
+
+- fix README.md does not display well on npmjs.com
+- check dependencies for security vulnerabilities
+
+
 # 2.0.0 (2018-04-18)
 
 - remove deprecated gulp-util dependency
